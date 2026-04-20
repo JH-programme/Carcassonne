@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#2C1810">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Carcassonne">
+  <link rel="manifest" href="manifest.json">
+  <title>Carcassonne – Compteur de tuiles</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --parchment: #F4ECD8;
+      --parchment-dark: #E8D9B8;
+      --ink: #2C1810;
+      --ink-light: #5C3D2E;
+      --city-gold: #C8860A;
+      --city-amber: #F0A500;
+      --road-stone: #6B7280;
+      --road-light: #9CA3AF;
+      --chapel-crimson: #8B1A1A;
+      --chapel-rose: #C0392B;
+      --accent-green: #2D5A27;
+      --zero: #999;
+      --shadow: rgba(44,24,16,0.18);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      background: var(--ink);
+      background-image:
+        radial-gradient(ellipse at 20% 0%, #3d1f0e 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 100%, #1a0f05 0%, transparent 60%);
+      min-height: 100dvh;
+      font-family: 'Crimson Text', Georgia, serif;
+      color: var(--ink);
+      overscroll-behavior: none;
+    }
+
+    /* ─── HEADER ─── */
+    header {
+      background: linear-gradient(180deg, #1a0a04 0%, #2C1810 100%);
+      border-bottom: 3px solid var(--city-gold);
+      padding: 14px 16px 10px;
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    }
+
+    header h1 {
+      font-family: 'Cinzel', serif;
+      font-weight: 700;
+      font-size: 1.35rem;
+      color: var(--city-amber);
+      letter-spacing: 0.12em;
+      text-shadow: 0 0 20px rgba(200,134,10,0.4);
+    }
+
+    .subtitle {
+      font-family: 'Crimson Text', serif;
+      font-style: italic;
+      color: var(--parchment-dark);
+      font-size: 0.78rem;
+      opacity: 0.75;
+      margin-top: 2px;
+    }
+
+    .total-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .total-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      color: var(--parchment-dark);
+      letter-spacing: 0.08em;
+      opacity: 0.8;
+    }
+
+    .total-count {
+      font-family: 'Cinzel', serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--city-amber);
+      text-shadow: 0 0 12px rgba(200,134,10,0.5);
+      min-width: 2.5ch;
+      text-align: center;
+    }
+
+    .reset-btn {
+      background: transparent;
+      border: 1px solid rgba(200,134,10,0.4);
+      color: var(--city-gold);
+      font-family: 'Cinzel', serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.08em;
+      padding: 4px 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .reset-btn:active { background: rgba(200,134,10,0.2); transform: scale(0.96); }
+
+    /* ─── MAIN SCROLL AREA ─── */
+    main {
+      padding: 14px 12px 90px;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* ─── SECTION HEADERS ─── */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 18px 0 10px;
+    }
+
+    .section-header:first-child { margin-top: 4px; }
+
+    .section-line {
+      flex: 1;
+      height: 1px;
+      opacity: 0.3;
+    }
+
+    .section-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+
+    .section-cities .section-line { background: var(--city-gold); }
+    .section-cities .section-title { color: var(--city-amber); background: rgba(200,134,10,0.12); border: 1px solid rgba(200,134,10,0.3); }
+
+    .section-roads .section-line { background: var(--road-stone); }
+    .section-roads .section-title { color: var(--road-light); background: rgba(107,114,128,0.15); border: 1px solid rgba(107,114,128,0.3); }
+
+    .section-chapels .section-line { background: var(--chapel-crimson); }
+    .section-chapels .section-title { color: #E57373; background: rgba(139,26,26,0.15); border: 1px solid rgba(139,26,26,0.3); }
+
+    /* ─── TILE GRID ─── */
+    .tile-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+    }
+
+    /* ─── TILE CARD ─── */
+    .tile-card {
+      background: var(--parchment);
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%238B7355' fill-opacity='0.06'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      border-radius: 10px;
+      border: 2px solid rgba(139,115,85,0.35);
+      box-shadow: 0 3px 10px var(--shadow), inset 0 1px 0 rgba(255,255,255,0.6);
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.12s, box-shadow 0.12s, opacity 0.2s;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 6px 8px;
+      gap: 5px;
+      -webkit-user-select: none;
+    }
+
+    .tile-card:active {
+      transform: scale(0.93);
+      box-shadow: 0 1px 4px var(--shadow);
+    }
+
+    .tile-card.zero {
+      opacity: 0.42;
+      filter: grayscale(0.6);
+    }
+
+    .tile-card.pulse .tile-svg {
+      animation: pulse 0.25s ease-out;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      40% { transform: scale(0.82); }
+      100% { transform: scale(1); }
+    }
+
+    /* ─── SVG TILE ILLUSTRATION ─── */
+    .tile-svg {
+      width: 62px;
+      height: 62px;
+      border-radius: 7px;
+      border: 1.5px solid rgba(139,115,85,0.5);
+      flex-shrink: 0;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.12);
+    }
+
+    /* ─── TILE LABEL ─── */
+    .tile-label {
+      font-family: 'Crimson Text', serif;
+      font-size: 0.7rem;
+      line-height: 1.25;
+      text-align: center;
+      color: var(--ink-light);
+      font-style: italic;
+    }
+
+    /* ─── COUNTER ─── */
+    .tile-counter {
+      font-family: 'Cinzel', serif;
+      font-weight: 700;
+      font-size: 1.45rem;
+      color: var(--ink);
+      line-height: 1;
+    }
+
+    .tile-card.zero .tile-counter {
+      color: var(--zero);
+    }
+
+    /* ─── CATEGORY COLOR ACCENTS ─── */
+    .tile-card.cat-city { border-color: rgba(200,134,10,0.45); }
+    .tile-card.cat-city::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--city-gold), var(--city-amber));
+      border-radius: 0 0 8px 8px;
+    }
+
+    .tile-card.cat-road { border-color: rgba(107,114,128,0.4); }
+    .tile-card.cat-road::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #6B7280, #9CA3AF);
+      border-radius: 0 0 8px 8px;
+    }
+
+    .tile-card.cat-chapel { border-color: rgba(139,26,26,0.4); }
+    .tile-card.cat-chapel::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--chapel-crimson), var(--chapel-rose));
+      border-radius: 0 0 8px 8px;
+    }
+
+    /* ─── LONG PRESS INDICATOR ─── */
+    .tile-card .restore-hint {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: rgba(244,236,216,0.92);
+      border-radius: 8px;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cinzel', serif;
+      font-size: 0.6rem;
+      color: var(--ink-light);
+      letter-spacing: 0.05em;
+      text-align: center;
+      padding: 6px;
+    }
+
+    .tile-card.long-pressed .restore-hint { display: flex; }
+
+    /* ─── BOTTOM UNDO BAR ─── */
+    .undo-bar {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: linear-gradient(0deg, #1a0a04 0%, rgba(26,10,4,0.95) 100%);
+      border-top: 2px solid rgba(200,134,10,0.3);
+      padding: 10px 16px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      backdrop-filter: blur(10px);
+      z-index: 50;
+    }
+
+    .undo-btn {
+      background: rgba(200,134,10,0.15);
+      border: 1.5px solid rgba(200,134,10,0.4);
+      color: var(--city-gold);
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      padding: 8px 18px;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex: 1;
+    }
+    .undo-btn:active { background: rgba(200,134,10,0.3); transform: scale(0.96); }
+    .undo-btn:disabled { opacity: 0.3; }
+
+    .undo-info {
+      font-family: 'Crimson Text', serif;
+      font-style: italic;
+      font-size: 0.75rem;
+      color: var(--parchment-dark);
+      opacity: 0.6;
+      text-align: right;
+      flex: 1;
+      line-height: 1.3;
+    }
+
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>⚔ Carcassonne</h1>
+  <p class="subtitle">Compteur de tuiles</p>
+  <div class="total-bar">
+    <span class="total-label">TUILES RESTANTES</span>
+    <span class="total-count" id="totalCount">71</span>
+    <button class="reset-btn" onclick="resetAll()">↺ Réinitialiser</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- VILLES -->
+  <div class="section-header section-cities">
+    <div class="section-line"></div>
+    <span class="section-title">🏙 Villes</span>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="tile-grid" id="grid-cities"></div>
+
+  <!-- ROUTES -->
+  <div class="section-header section-roads">
+    <div class="section-line"></div>
+    <span class="section-title">🛣 Routes</span>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="tile-grid" id="grid-roads"></div>
+
+  <!-- CHAPELLES -->
+  <div class="section-header section-chapels">
+    <div class="section-line"></div>
+    <span class="section-title">⛪ Chapelles</span>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="tile-grid" id="grid-chapels"></div>
+
+</main>
+
+<div class="undo-bar">
+  <button class="undo-btn" id="undoBtn" onclick="undo()" disabled>↩ Annuler</button>
+  <div class="undo-info" id="undoInfo">Appui long<br>pour +1</div>
+</div>
+
+<script>
+// ─── TILE DATA ───
+// SVG inline pour chaque type de tuile
+// Palette : champ = #5C8A3C (vert), ville = #C8860A (or), route = #B0A080 (beige gris)
+const FIELD = '#7AB648';
+const CITY  = '#C8860A';
+const ROAD  = '#D4C5A0';
+const GRASS = '#5A9E35';
+
+function svgTile(content) {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60" class="tile-svg">${content}</svg>`;
+}
+
+// Background commun : fond champ
+const BG = `<rect width="60" height="60" fill="${FIELD}"/>`;
+const CITY_TEX = `<rect width="60" height="60" fill="${FIELD}"/>`; // champ de base
+
+function cityBlock(x,y,w,h) {
+  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${CITY}" rx="2"/>
+          <rect x="${x+1}" y="${y+1}" width="${w-2}" height="${h-2}" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1" rx="1"/>`;
+}
+
+function roadLine(x1,y1,x2,y2,w=6) {
+  return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${ROAD}" stroke-width="${w}" stroke-linecap="round"/>
+          <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="rgba(255,255,255,0.25)" stroke-width="${w*0.4}" stroke-linecap="round"/>`;
+}
+
+const TILES = [
+  // ── VILLES ──
+  {
+    id: 'v1', cat: 'city', label: 'Ville\n1 bord', count: 5,
+    svg: svgTile(`${BG}${cityBlock(0,0,60,20)}`)
+  },
+  {
+    id: 'v1r', cat: 'city', label: 'Ville 1 bord\n+ route', count: 3,
+    svg: svgTile(`${BG}${cityBlock(0,0,60,20)}${roadLine(0,38,60,38)}`)
+  },
+  {
+    id: 'v2o', cat: 'city', label: 'Ville\n2 bords\nopposés', count: 1,
+    svg: svgTile(`${BG}${cityBlock(0,0,60,20)}${cityBlock(0,40,60,20)}`)
+  },
+  {
+    id: 'v2or', cat: 'city', label: 'Ville 2 bords\nopp. + route', count: 3,
+    svg: svgTile(`${BG}${cityBlock(0,0,60,20)}${cityBlock(0,40,60,20)}${roadLine(0,30,60,30)}`)
+  },
+  {
+    id: 'v2a', cat: 'city', label: 'Ville\n2 bords\nadjacents', count: 5,
+    svg: svgTile(`${BG}${cityBlock(0,0,60,20)}${cityBlock(40,0,20,60)}`)
+  },
+  {
+    id: 'v2ar', cat: 'city', label: 'Ville 2 adj.\n+ route', count: 3,
+    svg: svgTile(`${BG}${cityBlock(0,0,60,20)}${cityBlock(40,0,20,60)}${roadLine(0,38,20,38)}`)
+  },
+  {
+    id: 'v3', cat: 'city', label: 'Ville\n3 bords', count: 4,
+    svg: svgTile(`${BG}${cityBlock(0,0,60,20)}${cityBlock(0,0,20,60)}${cityBlock(40,0,20,60)}`)
+  },
+  {
+    id: 'v3r', cat: 'city', label: 'Ville 3 bords\n+ route', count: 3,
+    svg: svgTile(`${BG}${cityBlock(0,0,60,20)}${cityBlock(0,0,20,60)}${cityBlock(40,0,20,60)}${roadLine(20,40,40,40)}`)
+  },
+  {
+    id: 'v4', cat: 'city', label: 'Ville\ncomplète', count: 3,
+    svg: svgTile(`<rect width="60" height="60" fill="${CITY}" rx="0"/>
+      <rect x="2" y="2" width="56" height="56" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+      <rect x="10" y="10" width="40" height="40" fill="rgba(0,0,0,0.1)" rx="3"/>
+      <circle cx="30" cy="30" r="8" fill="rgba(255,255,255,0.15)"/>`)
+  },
+
+  // ── ROUTES ──
+  {
+    id: 'rd', cat: 'road', label: 'Route\ndroite', count: 8,
+    svg: svgTile(`${BG}${roadLine(30,0,30,60)}`)
+  },
+  {
+    id: 'rv', cat: 'road', label: 'Route\nvirage', count: 9,
+    svg: svgTile(`${BG}<path d="M30 60 Q30 30 60 30" fill="none" stroke="${ROAD}" stroke-width="6" stroke-linecap="round"/>
+      <path d="M30 60 Q30 30 60 30" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2.4" stroke-linecap="round"/>`)
+  },
+  {
+    id: 'r3', cat: 'road', label: 'Carrefour\n3 routes', count: 4,
+    svg: svgTile(`${BG}<circle cx="30" cy="30" r="5" fill="${ROAD}"/>
+      ${roadLine(30,0,30,25)}${roadLine(0,30,25,30)}${roadLine(35,30,60,30)}
+      <circle cx="30" cy="30" r="4" fill="#C4B898"/>`)
+  },
+  {
+    id: 'r4', cat: 'road', label: 'Carrefour\n4 routes', count: 1,
+    svg: svgTile(`${BG}<circle cx="30" cy="30" r="5" fill="${ROAD}"/>
+      ${roadLine(30,0,30,25)}${roadLine(30,35,30,60)}${roadLine(0,30,25,30)}${roadLine(35,30,60,30)}
+      <circle cx="30" cy="30" r="4" fill="#C4B898"/>`)
+  },
+
+  // ── CHAPELLES ──
+  {
+    id: 'ch', cat: 'chapel', label: 'Chapelle\nseule', count: 4,
+    svg: svgTile(`${BG}
+      <rect x="20" y="28" width="20" height="18" fill="#8B3A3A" rx="1"/>
+      <polygon points="30,12 18,30 42,30" fill="#A04040"/>
+      <rect x="27" y="34" width="6" height="12" fill="#5C1A1A"/>
+      <rect x="28.5" y="19" width="3" height="8" fill="rgba(255,255,255,0.4)"/>
+      <rect x="25" y="22" width="10" height="3" fill="rgba(255,255,255,0.4)"/>`)
+  },
+  {
+    id: 'chr', cat: 'chapel', label: 'Chapelle\n+ route', count: 2,
+    svg: svgTile(`${BG}
+      <rect x="20" y="22" width="20" height="18" fill="#8B3A3A" rx="1"/>
+      <polygon points="30,8 18,24 42,24" fill="#A04040"/>
+      <rect x="27" y="28" width="6" height="12" fill="#5C1A1A"/>
+      <rect x="28.5" y="13" width="3" height="7" fill="rgba(255,255,255,0.4)"/>
+      <rect x="25" y="16" width="10" height="3" fill="rgba(255,255,255,0.4)"/>
+      ${roadLine(30,40,30,60)}`)
+  },
+];
+
+// ─── STATE ───
+let state = TILES.map(t => t.count);
+let history = []; // {tileIdx, delta}
+
+function getTotal() { return state.reduce((a,b) => a+b, 0); }
+
+// ─── RENDER ───
+function buildGrid() {
+  const grids = { city: document.getElementById('grid-cities'), road: document.getElementById('grid-roads'), chapel: document.getElementById('grid-chapels') };
+  TILES.forEach((tile, i) => {
+    const card = document.createElement('div');
+    card.className = `tile-card cat-${tile.cat}`;
+    card.id = `card-${i}`;
+    card.innerHTML = `
+      ${tile.svg}
+      <div class="tile-label">${tile.label.replace(/\n/g,'<br>')}</div>
+      <div class="tile-counter" id="cnt-${i}">${tile.count}</div>
+      <div class="restore-hint">Maintenir<br>pour +1</div>
+    `;
+    // Tap = -1
+    card.addEventListener('click', () => decrement(i));
+    // Long press = +1
+    let pressTimer;
+    card.addEventListener('pointerdown', () => {
+      pressTimer = setTimeout(() => {
+        card.classList.add('long-pressed');
+        increment(i);
+        setTimeout(() => card.classList.remove('long-pressed'), 600);
+      }, 500);
+    });
+    card.addEventListener('pointerup', () => clearTimeout(pressTimer));
+    card.addEventListener('pointerleave', () => clearTimeout(pressTimer));
+
+    grids[tile.cat].appendChild(card);
+  });
+}
+
+function updateCard(i) {
+  const cnt = document.getElementById(`cnt-${i}`);
+  const card = document.getElementById(`card-${i}`);
+  cnt.textContent = state[i];
+  card.classList.toggle('zero', state[i] === 0);
+
+  // pulse
+  card.classList.remove('pulse');
+  void card.offsetWidth;
+  const svg = card.querySelector('.tile-svg');
+  svg.classList.remove('pulse');
+  void svg.offsetWidth;
+  svg.classList.add('pulse');
+}
+
+function updateTotal() {
+  document.getElementById('totalCount').textContent = getTotal();
+}
+
+function updateUndo() {
+  const btn = document.getElementById('undoBtn');
+  const info = document.getElementById('undoInfo');
+  btn.disabled = history.length === 0;
+  if (history.length > 0) {
+    const last = history[history.length - 1];
+    const name = TILES[last.tileIdx].label.replace(/\n/g,' ');
+    info.innerHTML = `Dernier: <b>${name}</b>`;
+  } else {
+    info.innerHTML = 'Appui long<br>pour +1';
+  }
+}
+
+function decrement(i) {
+  if (state[i] <= 0) return;
+  state[i]--;
+  history.push({ tileIdx: i, delta: -1 });
+  if (history.length > 30) history.shift();
+  updateCard(i);
+  updateTotal();
+  updateUndo();
+  saveState();
+}
+
+function increment(i) {
+  if (state[i] >= TILES[i].count) return;
+  state[i]++;
+  history.push({ tileIdx: i, delta: +1 });
+  if (history.length > 30) history.shift();
+  updateCard(i);
+  updateTotal();
+  updateUndo();
+  saveState();
+}
+
+function undo() {
+  if (history.length === 0) return;
+  const last = history.pop();
+  state[last.tileIdx] -= last.delta;
+  updateCard(last.tileIdx);
+  updateTotal();
+  updateUndo();
+  saveState();
+}
+
+function resetAll() {
+  if (!confirm('Réinitialiser toutes les tuiles à leur valeur de départ ?')) return;
+  state = TILES.map(t => t.count);
+  history = [];
+  TILES.forEach((_, i) => updateCard(i));
+  updateTotal();
+  updateUndo();
+  saveState();
+}
+
+// ─── PERSISTENCE ───
+function saveState() {
+  localStorage.setItem('carc_state', JSON.stringify(state));
+}
+
+function loadState() {
+  const saved = localStorage.getItem('carc_state');
+  if (saved) {
+    try {
+      const arr = JSON.parse(saved);
+      if (arr.length === TILES.length) {
+        state = arr;
+      }
+    } catch(e) {}
+  }
+}
+
+// ─── INIT ───
+loadState();
+buildGrid();
+updateTotal();
+updateUndo();
+
+// ─── SERVICE WORKER ───
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
