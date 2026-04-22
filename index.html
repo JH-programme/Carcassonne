@@ -405,48 +405,94 @@ function roadLine(x1,y1,x2,y2,w=6) {
 }
 
 const TILES = [
-  // ── VILLES ──
+  // ════════════════════════════════
+  // VILLES — 44 tuiles
+  // ════════════════════════════════
+
+  // 1. 3 routes + 1 bord ville (carrefour T avec ville en haut)
   {
-    id: 'v1', cat: 'city', label: 'Ville\n1 bord', count: 5,
+    id: 'v1_3r', cat: 'city', label: 'Ville 1 bord\n+ 3 routes', count: 3,
+    svg: svgTile(`${BG}${cityBlock(0,0,60,20)}
+      <circle cx="30" cy="40" r="5" fill="${ROAD}"/>
+      ${roadLine(30,25,30,35)}${roadLine(0,40,25,40)}${roadLine(35,40,60,40)}
+      <circle cx="30" cy="40" r="4" fill="#C4B898"/>`)
+  },
+  // 2. Route virage droite + 1 bord ville (ville haut, route haut→droite)
+  {
+    id: 'v1_vd', cat: 'city', label: 'Ville 1 bord\n+ virage droite', count: 3,
+    svg: svgTile(`${BG}${cityBlock(0,0,60,20)}
+      <path d="M60 40 Q35 40 35 60" fill="none" stroke="${ROAD}" stroke-width="6" stroke-linecap="round"/>
+      <path d="M60 40 Q35 40 35 60" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2.4" stroke-linecap="round"/>`)
+  },
+  // 3. Route virage gauche + 1 bord ville (ville haut, route haut→gauche)
+  {
+    id: 'v1_vg', cat: 'city', label: 'Ville 1 bord\n+ virage gauche', count: 3,
+    svg: svgTile(`${BG}${cityBlock(0,0,60,20)}
+      <path d="M0 40 Q25 40 25 60" fill="none" stroke="${ROAD}" stroke-width="6" stroke-linecap="round"/>
+      <path d="M0 40 Q25 40 25 60" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2.4" stroke-linecap="round"/>`)
+  },
+  // 4. Route droite + 1 bord ville (ville haut, route traverse gauche-droite)
+  {
+    id: 'v1_rd', cat: 'city', label: 'Ville 1 bord\n+ route droite', count: 4,
+    svg: svgTile(`${BG}${cityBlock(0,0,60,20)}${roadLine(0,40,60,40)}`)
+  },
+  // 5. 1 bord ville seul (aucune route)
+  {
+    id: 'v1', cat: 'city', label: 'Ville\n1 bord seul', count: 5,
     svg: svgTile(`${BG}${cityBlock(0,0,60,20)}`)
   },
+  // 6. 2 bords opposés séparés (2 villes distinctes, pas reliées)
   {
-    id: 'v1r', cat: 'city', label: 'Ville 1 bord\n+ route', count: 3,
-    svg: svgTile(`${BG}${cityBlock(0,0,60,20)}${roadLine(0,38,60,38)}`)
+    id: 'v2os', cat: 'city', label: 'Ville 2 bords\nopp. séparés', count: 2,
+    svg: svgTile(`${BG}${cityBlock(0,0,60,18)}${cityBlock(0,42,60,18)}`)
   },
+  // 7. 2 bords opposés reliés (tunnel de ville N-S)
   {
-    id: 'v2o', cat: 'city', label: 'Ville\n2 bords\nopposés', count: 1,
-    svg: svgTile(`${BG}${cityBlock(0,0,60,20)}${cityBlock(0,40,60,20)}`)
+    id: 'v2or', cat: 'city', label: 'Ville 2 bords\nopp. reliés', count: 3,
+    svg: svgTile(`${BG}${cityBlock(0,0,60,18)}${cityBlock(0,42,60,18)}
+      <rect x="18" y="18" width="24" height="24" fill="${CITY}" opacity="0.5"/>`)
   },
+  // 8. 2 bords côte à côte reliés (coin de ville, une seule ville)
   {
-    id: 'v2or', cat: 'city', label: 'Ville 2 bords\nopp. + route', count: 3,
-    svg: svgTile(`${BG}${cityBlock(0,0,60,20)}${cityBlock(0,40,60,20)}${roadLine(0,30,60,30)}`)
+    id: 'v2ar', cat: 'city', label: 'Ville 2 bords\nadj. reliés', count: 5,
+    svg: svgTile(`${BG}${cityBlock(0,0,60,20)}${cityBlock(40,0,20,60)}
+      <polygon points="40,20 60,20 60,60 40,60" fill="${CITY}" opacity="0.15"/>`)
   },
+  // 9. 2 bords côte à côte NON reliés (deux villes distinctes en coin)
   {
-    id: 'v2a', cat: 'city', label: 'Ville\n2 bords\nadjacents', count: 5,
-    svg: svgTile(`${BG}${cityBlock(0,0,60,20)}${cityBlock(40,0,20,60)}`)
+    id: 'v2an', cat: 'city', label: 'Ville 2 bords\nadj. séparés', count: 2,
+    svg: svgTile(`${BG}${cityBlock(0,0,60,18)}${cityBlock(42,0,18,60)}`)
   },
+  // 10. 2 bords côte à côte reliés + route qui tourne (dans le coin libre)
   {
-    id: 'v2ar', cat: 'city', label: 'Ville 2 adj.\n+ route', count: 3,
-    svg: svgTile(`${BG}${cityBlock(0,0,60,20)}${cityBlock(40,0,20,60)}${roadLine(0,38,20,38)}`)
+    id: 'v2ar_r', cat: 'city', label: 'Ville 2 adj.\nreliés + route', count: 5,
+    svg: svgTile(`${BG}${cityBlock(0,0,60,20)}${cityBlock(40,0,20,60)}
+      <path d="M0 40 Q20 40 20 60" fill="none" stroke="${ROAD}" stroke-width="6" stroke-linecap="round"/>
+      <path d="M0 40 Q20 40 20 60" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2.4" stroke-linecap="round"/>`)
   },
+  // 11. 3 bords + route dans la ville (ville sur 3 côtés, route sort du 4e)
+  {
+    id: 'v3r', cat: 'city', label: 'Ville 3 bords\n+ route', count: 3,
+    svg: svgTile(`${BG}${cityBlock(0,0,60,20)}${cityBlock(0,0,20,60)}${cityBlock(40,0,20,60)}
+      ${roadLine(20,40,40,40)}`)
+  },
+  // 12. 3 bords sans route
   {
     id: 'v3', cat: 'city', label: 'Ville\n3 bords', count: 4,
     svg: svgTile(`${BG}${cityBlock(0,0,60,20)}${cityBlock(0,0,20,60)}${cityBlock(40,0,20,60)}`)
   },
+  // 13. Ville complète 4 bords
   {
-    id: 'v3r', cat: 'city', label: 'Ville 3 bords\n+ route', count: 3,
-    svg: svgTile(`${BG}${cityBlock(0,0,60,20)}${cityBlock(0,0,20,60)}${cityBlock(40,0,20,60)}${roadLine(20,40,40,40)}`)
-  },
-  {
-    id: 'v4', cat: 'city', label: 'Ville\ncomplète', count: 3,
-    svg: svgTile(`<rect width="60" height="60" fill="${CITY}" rx="0"/>
-      <rect x="2" y="2" width="56" height="56" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
-      <rect x="10" y="10" width="40" height="40" fill="rgba(0,0,0,0.1)" rx="3"/>
-      <circle cx="30" cy="30" r="8" fill="rgba(255,255,255,0.15)"/>`)
+    id: 'v4', cat: 'city', label: 'Ville\ncomplète', count: 1,
+    svg: svgTile(`<rect width="60" height="60" fill="${CITY}"/>
+      <rect x="3" y="3" width="54" height="54" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+      <rect x="12" y="12" width="36" height="36" fill="rgba(0,0,0,0.12)" rx="3"/>
+      <circle cx="30" cy="30" r="7" fill="rgba(255,255,255,0.18)"/>`)
   },
 
-  // ── ROUTES ──
+  // ════════════════════════════════
+  // ROUTES — 22 tuiles
+  // ════════════════════════════════
   {
     id: 'rd', cat: 'road', label: 'Route\ndroite', count: 8,
     svg: svgTile(`${BG}${roadLine(30,0,30,60)}`)
@@ -469,9 +515,11 @@ const TILES = [
       <circle cx="30" cy="30" r="4" fill="#C4B898"/>`)
   },
 
-  // ── CHAPELLES ──
+  // ════════════════════════════════
+  // ABBAYES — 6 tuiles
+  // ════════════════════════════════
   {
-    id: 'ch', cat: 'chapel', label: 'Chapelle\nseule', count: 4,
+    id: 'ch', cat: 'chapel', label: 'Abbaye\nseule', count: 4,
     svg: svgTile(`${BG}
       <rect x="20" y="28" width="20" height="18" fill="#8B3A3A" rx="1"/>
       <polygon points="30,12 18,30 42,30" fill="#A04040"/>
@@ -480,14 +528,14 @@ const TILES = [
       <rect x="25" y="22" width="10" height="3" fill="rgba(255,255,255,0.4)"/>`)
   },
   {
-    id: 'chr', cat: 'chapel', label: 'Chapelle\n+ route', count: 2,
+    id: 'chr', cat: 'chapel', label: 'Abbaye\n+ route', count: 2,
     svg: svgTile(`${BG}
-      <rect x="20" y="22" width="20" height="18" fill="#8B3A3A" rx="1"/>
-      <polygon points="30,8 18,24 42,24" fill="#A04040"/>
-      <rect x="27" y="28" width="6" height="12" fill="#5C1A1A"/>
-      <rect x="28.5" y="13" width="3" height="7" fill="rgba(255,255,255,0.4)"/>
-      <rect x="25" y="16" width="10" height="3" fill="rgba(255,255,255,0.4)"/>
-      ${roadLine(30,40,30,60)}`)
+      <rect x="20" y="20" width="20" height="18" fill="#8B3A3A" rx="1"/>
+      <polygon points="30,6 18,22 42,22" fill="#A04040"/>
+      <rect x="27" y="26" width="6" height="12" fill="#5C1A1A"/>
+      <rect x="28.5" y="11" width="3" height="7" fill="rgba(255,255,255,0.4)"/>
+      <rect x="25" y="14" width="10" height="3" fill="rgba(255,255,255,0.4)"/>
+      ${roadLine(30,38,30,60)}`)
   },
 ];
 
