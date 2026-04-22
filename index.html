@@ -452,29 +452,31 @@ const TILES = [
     svg: svgTile(`${BG}${cityBlock(0,0,60,18)}${cityBlock(0,42,60,18)}
       <rect x="18" y="18" width="24" height="24" fill="${CITY}" opacity="0.5"/>`)
   },
-  // 8. 2 bords côte à côte reliés (coin de ville, une seule ville)
+  // 8. 2 bords côte à côte reliés → triangle marron haut+droite, reste vert
   {
     id: 'v2ar', cat: 'city', label: 'Ville 2 bords\nadj. reliés', count: 5,
-    svg: svgTile(`${BG}${cityBlock(0,0,60,20)}${cityBlock(40,0,20,60)}
-      <polygon points="40,20 60,20 60,60 40,60" fill="${CITY}" opacity="0.15"/>`)
+    svg: svgTile(`${BG}<polygon points="0,0 60,0 60,60" fill="${CITY}"/>`)
   },
-  // 9. 2 bords côte à côte NON reliés (deux villes distinctes en coin)
+  // 9. 2 bords côte à côte NON reliés → bande haut + bande droite, coin haut-droit vert
   {
     id: 'v2an', cat: 'city', label: 'Ville 2 bords\nadj. séparés', count: 2,
-    svg: svgTile(`${BG}${cityBlock(0,0,60,18)}${cityBlock(42,0,18,60)}`)
+    svg: svgTile(`${BG}
+      <rect x="0" y="0" width="60" height="18" fill="${CITY}"/>
+      <rect x="42" y="18" width="18" height="42" fill="${CITY}"/>
+      <rect x="42" y="0" width="18" height="18" fill="${FIELD}"/>`)
   },
-  // 10. 2 bords côte à côte reliés + route qui tourne (dans le coin libre)
+  // 10. 2 bords côte à côte reliés + route → triangle marron haut-droite, route dans partie verte
   {
     id: 'v2ar_r', cat: 'city', label: 'Ville 2 adj.\nreliés + route', count: 5,
-    svg: svgTile(`${BG}${cityBlock(0,0,60,20)}${cityBlock(40,0,20,60)}
+    svg: svgTile(`${BG}<polygon points="0,0 60,0 60,60" fill="${CITY}"/>
       <path d="M0 40 Q20 40 20 60" fill="none" stroke="${ROAD}" stroke-width="6" stroke-linecap="round"/>
       <path d="M0 40 Q20 40 20 60" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="2.4" stroke-linecap="round"/>`)
   },
-  // 11. 3 bords + route dans la ville (ville sur 3 côtés, route sort du 4e)
+  // 11. 3 bords + route verticale (sort par le bas, centre)
   {
     id: 'v3r', cat: 'city', label: 'Ville 3 bords\n+ route', count: 3,
     svg: svgTile(`${BG}${cityBlock(0,0,60,20)}${cityBlock(0,0,20,60)}${cityBlock(40,0,20,60)}
-      ${roadLine(20,40,40,40)}`)
+      ${roadLine(30,20,30,60)}`)
   },
   // 12. 3 bords sans route
   {
